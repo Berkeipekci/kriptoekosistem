@@ -8,7 +8,82 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://smtpjs.com/v3/smtp.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* Quiz Modal Styles */
+.quiz-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+}
+
+.quiz-modal.active {
+    display: block;
+}
+
+.quiz-modal-content {
+    position: relative;
+    background: var(--surface);
+    width: 90%;
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid rgba(153, 69, 255, 0.2);
+}
+
+.close-button {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 30px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-button:hover {
+    color: var(--primary);
+}
+
+.quiz-card {
+    padding: 1rem;
+}
+
+.quiz-question {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: var(--text);
+}
+
+.quiz-options {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.quiz-option {
+    width: 100%;
+    padding: 1rem;
+    background: var(--surface-light);
+    border: 1px solid rgba(153, 69, 255, 0.2);
+    border-radius: 8px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quiz-option:hover {
+    border-color: var(--primary);
+    transform: translateX(10px);
+}
 
 
         :root {
@@ -72,8 +147,8 @@
         }
 
         .nav-links {
-            display: flex;
-            gap: 2rem;
+        display: flex;
+        gap: 2rem;
         }
 
         .nav-link {
@@ -172,11 +247,34 @@
             padding: 1.5rem;
             border: 1px solid rgba(153, 69, 255, 0.2);
             transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
         }
 
-        .coin-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(153, 69, 255, 0.1);
+        .coin-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .coin-details {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(153, 69, 255, 0.2);
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            font-weight: 500;
         }
 
         .coin-header {
@@ -602,7 +700,386 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        .loading-indicator {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-indicator i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            background: var(--surface);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 71, 71, 0.2);
+        }
+
+        .error-message i {
+            font-size: 2rem;
+            color: #ff4747;
+            margin-bottom: 1rem;
+        }
+
+        .news-card a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .converter-container {
+            background: var(--surface-light);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 3rem;
+            border: 1px solid rgba(153, 69, 255, 0.2);
+        }
+
+        .converter-container h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .converter-form {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .converter-form .form-group {
+            margin-bottom: 0;
+        }
+
+        .converter-form select,
+        .converter-form input {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--surface);
+            border: 1px solid rgba(153, 69, 255, 0.2);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .result {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid rgba(153, 69, 255, 0.2);
+        }
+
+        .education-section {
+            padding: 4rem 0;
+            background: var(--surface);
+        }
+
+        .education-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .education-card {
+            background: var(--surface-light);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(153, 69, 255, 0.2);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .education-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .education-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(153, 69, 255, 0.1);
+        }
+
+        .education-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .education-icon i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .education-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .education-item {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(153, 69, 255, 0.1);
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .education-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .education-item h4 {
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .education-item p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .newsletter-form {
+            display: flex;
+            gap: 1rem;
+            background: var(--surface-light);
+            padding: 0.5rem;
+            border-radius: 50px;
+            border: 1px solid rgba(153, 69, 255, 0.2);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .newsletter-form input[type="email"] {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 1rem 1.5rem;
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .newsletter-form input[type="email"]::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .newsletter-form .btn {
+            padding: 0.8rem 2rem;
+            border-radius: 25px;
+            margin: 0.2rem;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .newsletter-form .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(153, 69, 255, 0.3);
+        }
+
+        .quiz-section {
+            padding: 4rem 0;
+            background: var(--surface);
+        }
+
+        .quiz-container {
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+
+        .quiz-card {
+            background: var(--surface-light);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(153, 69, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(153, 69, 255, 0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--gradient);
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .quiz-question {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            color: var(--text);
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quiz-option {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: var(--surface-light);
+            border: 1px solid rgba(153, 69, 255, 0.2);
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--primary);
+            transform: translateX(10px);
+        }
+
+        .quiz-option.correct {
+            background: rgba(20, 241, 149, 0.1);
+            border-color: var(--secondary);
+        }
+
+        .quiz-option.wrong {
+            background: rgba(255, 71, 71, 0.1);
+            border-color: #ff4747;
+        }
+
+        .quiz-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .quiz-score {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .quiz-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        .quiz-modal.active {
+            display: block;
+        }
+
+        .quiz-modal-content {
+            position: relative;
+            background: var(--surface);
+            width: 90%;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(153, 69, 255, 0.2);
+        }
+
+        .close-button {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 30px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-button:hover {
+            color: var(--primary);
+        }
+
+        .quiz-card {
+            padding: 1rem;
+        }
+
+        .quiz-question {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            color: var(--text);
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quiz-option {
+            width: 100%;
+            padding: 1rem;
+            background: var(--surface-light);
+            border: 1px solid rgba(153, 69, 255, 0.2);
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--primary);
+            transform: translateX(10px);
+        }
     </style>
+    <!-- Quiz Modal -->
+    <div id="quizModal" class="quiz-modal">
+        <div class="quiz-modal-content">
+            <span class="close-button" onclick="quizModalKapat()">&times;</span>
+            <div class="quiz-card">
+                <div class="quiz-content"></div>
+            </div>
+        </div>
+    </div>
 </head>
 <body>
     <div class="geometric-background">
@@ -613,13 +1090,13 @@
 
     <!-- Navigation -->
     <nav class="nav">
-        <div class="container nav-container">
-            <a href="#" class="nav-logo">KriptoEkosistem</a>
+        <div class="nav-container">
+            <a href="#" class="nav-logo">Kripto Ekosistemi</a>
             <div class="nav-links">
-                <a href="#" class="nav-link active">Ana Sayfa</a>
                 <a href="#markets" class="nav-link">Piyasalar</a>
                 <a href="#news" class="nav-link">Haberler</a>
                 <a href="#contact" class="nav-link">İletişim</a>
+                <a href="#" class="nav-link" onclick="quizModalAc()">Quiz</a>
             </div>
         </div>
     </nav>
@@ -635,205 +1112,83 @@
     <!-- Market Stats Section -->
     <section id="markets" class="market-stats">
         <div class="container">
-            <h2 class="section-title">En Popüler 10 Kripto Para</h2>
+            <div class="section-header">
+                <h2>Piyasa İstatistikleri</h2>
+            </div>
             <div class="coin-grid">
-                <!-- Bitcoin -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin" class="coin-icon">
-                            <div>
-                                <div class="coin-name">Bitcoin</div>
-                                <div class="coin-symbol">BTC</div>
-                            </div>
-                        </div>
-                        <div class="coin-price">
-                            <div class="current-price">$48,250.32</div>
-                            <div class="price-change positive">+2.5%</div>
-                        </div>
+                <!-- Coin kartları buraya dinamik olarak eklenecek -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Education Section -->
+    <section id="education" class="education-section">
+        <div class="container">
+            <h2 class="section-title">Kripto Para Eğitimi</h2>
+            <div class="education-grid">
+                <!-- Temel Seviye -->
+                <div class="education-card beginner">
+                    <div class="education-icon">
+                        <i class="fas fa-seedling"></i>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="btcChart"></canvas>
+                    <h3>Temel Seviye</h3>
+                    <div class="education-content">
+                        <div class="education-item">
+                            <h4>Blockchain Nedir?</h4>
+                            <p>Blockchain teknolojisinin temelleri ve çalışma prensipleri.</p>
+                        </div>
+                        <div class="education-item">
+                            <h4>Kripto Para Nedir?</h4>
+                            <p>Kripto paraların tanımı, özellikleri ve kullanım alanları.</p>
+                        </div>
+                        <div class="education-item">
+                            <h4>Cüzdan Güvenliği</h4>
+                            <p>Kripto para cüzdanları ve güvenlik önlemleri.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Ethereum -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum" class="coin-icon">
-                            <div>
-                                <div class="coin-name">Ethereum</div>
-                                <div class="coin-symbol">ETH</div>
-                            </div>
-                        </div>
-                        <div class="coin-price">
-                            <div class="current-price">$2,890.15</div>
-                            <div class="price-change negative">-1.2%</div>
-                        </div>
+                <!-- Orta Seviye -->
+                <div class="education-card intermediate">
+                    <div class="education-icon">
+                        <i class="fas fa-chart-line"></i>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="ethChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Diğer 8 coin için benzer kartlar -->
-                <!-- BNB -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" alt="BNB" class="coin-icon">
-                            <div>
-                                <div class="coin-name">BNB</div>
-                                <div class="coin-symbol">BNB</div>
-                            </div>
+                    <h3>Orta Seviye</h3>
+                    <div class="education-content">
+                        <div class="education-item">
+                            <h4>Teknik Analiz</h4>
+                            <p>Grafik okuma ve temel teknik analiz yöntemleri.</p>
                         </div>
-                        <div class="coin-price">
-                            <div class="current-price">$312.45</div>
-                            <div class="price-change positive">+1.2%</div>
+                        <div class="education-item">
+                            <h4>DeFi Sistemleri</h4>
+                            <p>Merkeziyetsiz finans sistemleri ve protokolleri.</p>
                         </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="bnbChart"></canvas>
+                        <div class="education-item">
+                            <h4>Trading Stratejileri</h4>
+                            <p>Temel alım-satım stratejileri ve risk yönetimi.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Solana -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/solana-sol-logo.png" alt="Solana" class="coin-icon">
-                            <div>
-                                <div class="coin-name">Solana</div>
-                                <div class="coin-symbol">SOL</div>
-                            </div>
-                        </div>
-                        <div class="coin-price">
-                            <div class="current-price">$98.75</div>
-                            <div class="price-change positive">+5.8%</div>
-                        </div>
+                <!-- İleri Seviye -->
+                <div class="education-card advanced">
+                    <div class="education-icon">
+                        <i class="fas fa-brain"></i>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="solChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- XRP -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/xrp-xrp-logo.png" alt="XRP" class="coin-icon">
-                            <div>
-                                <div class="coin-name">XRP</div>
-                                <div class="coin-symbol">XRP</div>
-                            </div>
+                    <h3>İleri Seviye</h3>
+                    <div class="education-content">
+                        <div class="education-item">
+                            <h4>Smart Contracts</h4>
+                            <p>Akıllı kontratların çalışma mantığı ve uygulamaları.</p>
                         </div>
-                        <div class="coin-price">
-                            <div class="current-price">$0.58</div>
-                            <div class="price-change negative">-2.1%</div>
+                        <div class="education-item">
+                            <h4>Tokenomics</h4>
+                            <p>Token ekonomisi ve değerleme yöntemleri.</p>
                         </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="xrpChart"></canvas>
-                    </div>
-                </div>
-                <!-- Cardano -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/cardano-ada-logo.png" alt="Cardano" class="coin-icon">
-                            <div>
-                                <div class="coin-name">Cardano</div>
-                                <div class="coin-symbol">ADA</div>
-                            </div>
+                        <div class="education-item">
+                            <h4>DAO Yapıları</h4>
+                            <p>Merkeziyetsiz otonom organizasyonlar.</p>
                         </div>
-                        <div class="coin-price">
-                            <div class="current-price">$0.45</div>
-                            <div class="price-change positive">+3.2%</div>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="adaChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Dogecoin -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/dogecoin-doge-logo.png" alt="Dogecoin" class="coin-icon">
-                            <div>
-                                <div class="coin-name">Dogecoin</div>
-                                <div class="coin-symbol">DOGE</div>
-                            </div>
-                        </div>
-                        <div class="coin-price">
-                            <div class="current-price">$0.085</div>
-                            <div class="price-change positive">+1.8%</div>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="dogeChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Polygon -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/polygon-matic-logo.png" alt="Polygon" class="coin-icon">
-                            <div>
-                                <div class="coin-name">Polygon</div>
-                                <div class="coin-symbol">MATIC</div>
-                            </div>
-                        </div>
-                        <div class="coin-price">
-                            <div class="current-price">$0.78</div>
-                            <div class="price-change negative">-0.5%</div>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="maticChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Polkadot -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/polkadot-new-dot-logo.png" alt="Polkadot" class="coin-icon">
-                            <div>
-                                <div class="coin-name">Polkadot</div>
-                                <div class="coin-symbol">DOT</div>
-                            </div>
-                        </div>
-                        <div class="coin-price">
-                            <div class="current-price">$6.85</div>
-                            <div class="price-change positive">+2.3%</div>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="dotChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chainlink -->
-                <div class="coin-card">
-                    <div class="coin-header">
-                        <div class="coin-info">
-                            <img src="https://cryptologos.cc/logos/chainlink-link-logo.png" alt="Chainlink" class="coin-icon">
-                            <div>
-                                <div class="coin-name">Chainlink</div>
-                                <div class="coin-symbol">LINK</div>
-                            </div>
-                        </div>
-                        <div class="coin-price">
-                            <div class="current-price">$14.25</div>
-                            <div class="price-change positive">+4.1%</div>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="linkChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -845,133 +1200,9 @@
         <div class="container">
             <h2 class="section-title">Kripto Haberleri</h2>
             <div class="news-grid">
-                <!-- Haber 1 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=500" alt="Bitcoin ETF Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">Bitcoin</div>
-                        <h3>Bitcoin ETF'lerine Rekor Giriş</h3>
-                        <p>Spot Bitcoin ETF'leri piyasaya sürüldükten sonra ilk iki ayda 12 milyar dolardan fazla net giriş kaydetti.</p>
-                        <span class="news-date">2 saat önce</span>
-                    </div>
-                </div>
-
-                <!-- Haber 2 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=500" alt="Ethereum Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">Ethereum</div>
-                        <h3>Ethereum 2024'te Yeni ATH Hedefliyor</h3>
-                        <p>Ethereum'un yaklaşan güncellemeleri ve artan kurumsal ilgi, yeni bir boğa koşusu beklentilerini artırıyor.</p>
-                        <span class="news-date">4 saat önce</span>
-                    </div>
-                </div>
-                <!-- Haber 3 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1605792657660-596af9009e82?w=500" alt="Solana Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">Solana</div>
-                        <h3>Solana Ekosistemi Büyümeye Devam Ediyor</h3>
-                        <p>Solana'nın DeFi protokollerinde kilitli toplam değer 2024'te %150 artış gösterdi.</p>
-                        <span class="news-date">6 saat önce</span>
-                    </div>
-                </div>
-
-                <!-- Haber 4 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500" alt="BNB Chain Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">BNB Chain</div>
-                        <h3>BNB Chain Yeni Güncellemesini Duyurdu</h3>
-                        <p>BNB Chain, ağ performansını artıracak ve gas ücretlerini düşürecek yeni güncellemesini açıkladı.</p>
-                        <span class="news-date">8 saat önce</span>
-                    </div>
-                </div>
-
-                <!-- Haber 5 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=500" alt="XRP Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">XRP</div>
-                        <h3>Ripple ve SEC Davası Yeni Gelişmeler</h3>
-                        <p>Ripple'ın SEC ile olan davasında yeni belgeler ortaya çıktı. Piyasa tepkisi pozitif.</p>
-                        <span class="news-date">12 saat önce</span>
-                    </div>
-                </div>
-
-                <!-- Haber 6 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=500" alt="Cardano Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">Cardano</div>
-                        <h3>Cardano'dan Yeni Geliştirici Araçları</h3>
-                        <p>Cardano ekosistemi, geliştiriciler için yeni araçlar ve teşvikler sunmaya başladı.</p>
-                        <span class="news-date">14 saat önce</span>
-                    </div>
-                </div>
-
-                <!-- Haber 7 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=500" alt="Dogecoin Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">Dogecoin</div>
-                        <h3>Elon Musk'tan Yeni Dogecoin Açıklaması</h3>
-                        <p>Tesla CEO'su Elon Musk, Dogecoin'in X platformunda kullanımına yönelik yeni planlarını açıkladı.</p>
-                        <span class="news-date">16 saat önce</span>
-                    </div>
-                </div>
-
-                <!-- Haber 8 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=500" alt="Polygon Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">Polygon</div>
-                        <h3>Polygon zkEVM Mainnet Başarıyla Güncellendi</h3>
-                        <p>Polygon'un zkEVM çözümü başarılı bir güncelleme geçirdi, işlem hızları arttı.</p>
-                        <span class="news-date">18 saat önce</span>
-                    </div>
-                </div>
-
-                <!-- Haber 9 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=500" alt="Polkadot Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">Polkadot</div>
-                        <h3>Polkadot Ekosisteminde Yeni Parachain Rekoru</h3>
-                        <p>Polkadot ağında aktif parachain sayısı 50'yi aştı, ekosistem büyümeye devam ediyor.</p>
-                        <span class="news-date">20 saat önce</span>
-                    </div>
-                </div>
-
-                <!-- Haber 10 -->
-                <div class="news-card">
-                    <div class="news-image">
-                        <img src="https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=500" alt="Chainlink Haberi">
-                    </div>
-                    <div class="news-content">
-                        <div class="news-tag">Chainlink</div>
-                        <h3>Chainlink Staking v2 Duyuruldu</h3>
-                        <p>Chainlink, yeni staking modelini duyurdu. Kullanıcılar daha yüksek ödüller kazanabilecek.</p>
-                        <span class="news-date">22 saat önce</span>
-                    </div>
+                <div class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Haberler yükleniyor...</p>
                 </div>
             </div>
         </div>
@@ -1019,6 +1250,7 @@
             </div>
         </div>
     </section>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -1043,14 +1275,15 @@
                         <li><a href="#markets">Piyasalar</a></li>
                         <li><a href="#news">Haberler</a></li>
                         <li><a href="#contact">İletişim</a></li>
+                        <li><a href="#" onclick="quizBaslat(); return false;">Bilgilerinizi Test Edin</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h4>Bülten</h4>
                     <p>Kripto dünyasındaki son gelişmelerden haberdar olun.</p>
                     <form class="newsletter-form" onsubmit="return subscribeNewsletter(event)">
-                        <input type="email" placeholder="E-posta adresiniz" required>
-                        <button type="submit" class="btn btn-primary">Abone Ol</button>
+                        <input type="email" placeholder="E-posta adresinizi girin" required>
+                        <button type="submit" class="btn">Abone Ol</button>
                     </form>
                 </div>
             </div>
@@ -1059,7 +1292,6 @@
             </div>
         </div>
     </footer>
-
     <script>
         // Coin verileri güncellendi
         const cryptoData = {
@@ -1137,117 +1369,171 @@
 
         // Grafik oluşturma fonksiyonu güncellendi
         function createChart(coinSymbol) {
-            const ctx = document.getElementById(`${coinSymbol.toLowerCase()}Chart`).getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 150);
-            const data = cryptoData[coinSymbol];
-            
-            gradient.addColorStop(0, `${data.color}33`);
-            gradient.addColorStop(1, `${data.color}00`);
+            try {
+                const chartId = `${coinSymbol.toLowerCase()}Chart`;
+                const canvas = document.createElement('canvas');
+                canvas.id = chartId;
+                canvas.style.height = '150px';
+                
+                const coinCard = document.querySelector(`.coin-card:has(.coin-symbol:contains('${coinSymbol}'))`);
+                if (coinCard) {
+                    coinCard.appendChild(canvas);
+                    
+                    const ctx = canvas.getContext('2d');
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+                    const data = cryptoData[coinSymbol];
+                    
+                    gradient.addColorStop(0, `${data.color}33`);
+                    gradient.addColorStop(1, `${data.color}00`);
 
-            return new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['5s', '4s', '3s', '2s', '1s', 'Şimdi'],
-                    datasets: [{
-                        label: coinSymbol,
-                        data: data.history,
-                        borderColor: data.color,
-                        borderWidth: 2,
-                        fill: true,
-                        backgroundColor: gradient,
-                        tension: 0.4,
-                        pointRadius: 0,
-                        pointHoverRadius: 4,
-                        pointHoverBackgroundColor: data.color
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            display: false
+                    return new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['5s', '4s', '3s', '2s', '1s', 'Şimdi'],
+                            datasets: [{
+                                label: coinSymbol,
+                                data: data.history,
+                                borderColor: data.color,
+                                borderWidth: 2,
+                                fill: true,
+                                backgroundColor: gradient,
+                                tension: 0.4,
+                                pointRadius: 0,
+                                pointHoverRadius: 4,
+                                pointHoverBackgroundColor: data.color
+                            }]
                         },
-                        y: {
-                            display: false
+                        options: {
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    display: false
+                                },
+                                y: {
+                                    display: false
+                                }
+                            },
+                            responsive: true,
+                            maintainAspectRatio: false
                         }
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    }
+                    });
                 }
-            });
+            } catch (error) {
+                console.error(`Chart creation error for ${coinSymbol}:`, error);
+            }
         }
 
         // E-posta gönderimi için fonksiyon
-        function sendEmail(event) {
+        async function sendEmail(event) {
             event.preventDefault();
             
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const message = document.getElementById('message').value;
+            const submitButton = event.target.querySelector('button');
+            
+            try {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gönderiliyor...';
+                
+                await emailjs.send(
+                    "service_mnldaov",
+                    "template_ucqyb9l",
+                    {
+                        from_name: name,
+                        from_email: email,
+                        message: message,
+                        to_email: "berke.ipekci@gmail.com"
+                    }
+                );
 
-            // Email.js servisini kullanarak e-posta gönderimi
-            Email.send({
-                SecureToken: "YOUR_EMAILJS_SECURE_TOKEN", // EmailJS'den alınacak token
-                To: 'berke.ipekci@gmail.com',
-                From: email,
-                Subject: `KriptoEkosistem - Yeni İletişim Formu: ${name}`,
-                Body: `
-                    <h3>Yeni İletişim Formu Mesajı</h3>
-                    <p><strong>Gönderen:</strong> ${name}</p>
-                    <p><strong>E-posta:</strong> ${email}</p>
-                    <p><strong>Mesaj:</strong></p>
-                    <p>${message}</p>
-                `
-            }).then(
-                message => {
-                    alert('Mesajınız başarıyla gönderildi!');
-                    document.getElementById('contactForm').reset();
-                }
-            ).catch(
-                error => {
-                    console.error('E-posta gönderimi sırasında hata:', error);
-                    alert('Mesaj gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
-                }
-            );
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Başarılı!',
+                    text: 'Mesajınız başarıyla gönderildi.',
+                    confirmButtonColor: '#9945FF'
+                });
+
+                event.target.reset();
+
+            } catch (error) {
+                console.error('Mesaj gönderme hatası:', error);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hata!',
+                    text: 'Mesaj gönderilirken bir hata oluştu.',
+                    confirmButtonColor: '#9945FF'
+                });
+
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Gönder';
+            }
 
             return false;
         }
 
-        // Bülten aboneliği için fonksiyon
-        function subscribeNewsletter(event) {
+        // EmailJS başlatma
+        (function() {
+            emailjs.init("sjyBZfSHLsKEEAkx1");
+        })();
+
+        // Bülten aboneliği fonksiyonu
+        async function subscribeNewsletter(event) {
             event.preventDefault();
             
             const email = event.target.querySelector('input[type="email"]').value;
+            const submitButton = event.target.querySelector('button');
+            
+            try {
+                // Buton durumunu güncelle
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gönderiliyor...';
+                
+                // EmailJS ile e-posta gönder
+                await emailjs.send(
+                    "service_mnldaov",
+                    "template_ucqyb9l",
+                    {
+                        to_email: "berke.ipekci@gmail.com",
+                        from_email: email,
+                        subject: "Yeni Bülten Aboneliği",
+                        message: `Yeni bir bülten aboneliği: ${email}`
+                    }
+                );
 
-            // Email.js ile bülten aboneliği bildirimi
-            Email.send({
-                SecureToken: "YOUR_EMAILJS_SECURE_TOKEN", // EmailJS'den alınacak token
-                To: 'berke.ipekci@gmail.com',
-                From: email,
-                Subject: 'KriptoEkosistem - Yeni Bülten Aboneliği',
-                Body: `
-                    <h3>Yeni Bülten Aboneliği</h3>
-                    <p><strong>E-posta:</strong> ${email}</p>
-                `
-            }).then(
-                message => {
-                    alert('Bülten aboneliğiniz başarıyla gerçekleşti!');
-                    event.target.reset();
-                }
-            ).catch(
-                error => {
-                    console.error('Bülten aboneliği sırasında hata:', error);
-                    alert('İşlem sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
-                }
-            );
+                // Başarılı mesajı göster
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Başarılı!',
+                    text: 'Bülten aboneliğiniz başarıyla gerçekleşti.',
+                    confirmButtonColor: '#9945FF'
+                });
+
+                // Formu sıfırla
+                event.target.reset();
+
+            } catch (error) {
+                console.error('Bülten aboneliği hatası:', error);
+                
+                // Hata mesajı göster
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hata!',
+                    text: 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.',
+                    confirmButtonColor: '#9945FF'
+                });
+
+            } finally {
+                // Buton durumunu geri al
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Abone Ol';
+            }
 
             return false;
         }
@@ -1256,14 +1542,20 @@
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+                const targetId = this.getAttribute('href');
+                if (targetId && targetId !== '#') {
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                }
             });
         });
 
         // Sayfa yüklendiğinde
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // Önce grafikleri oluştur
             Object.keys(cryptoData).forEach(coin => {
                 createChart(coin);
@@ -1330,6 +1622,14 @@
 
             // Sayfa yüklenme animasyonu
             document.body.classList.add('loaded');
+
+            // Mevcut DOMContentLoaded içeriğine ekleyin
+            haberleriGuncelle();
+            
+            // Her 5 dakikada bir haberleri güncelle
+            setInterval(haberleriGuncelle, 300000);
+
+            donusturucuOlustur();
         });
 
         // Coin fiyatlarını güncelle
@@ -1386,6 +1686,448 @@
                 shape.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
             });
         });
+
+        async function haberleriFeeddenCek() {
+            try {
+                // Türkçe kripto haber kaynakları
+                const turkceRssKaynaklar = [
+                    'https://www.coinkolik.com/feed/',
+                    'https://kriptokoin.com/feed/',
+                    'https://www.btchaber.com/feed/'
+                ];
+
+                const API_KEY = 'whhza1h2fziyj84nfyl66kfqg3lg6y165gtqo0ho';
+                let tumHaberler = [];
+
+                for (const kaynak of turkceRssKaynaklar) {
+                    try {
+                        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(kaynak)}&api_key=${API_KEY}`);
+                        const data = await response.json();
+
+                        if (data.status === 'ok') {
+                            const kaynakHaberler = data.items.slice(0, 5).map(item => ({
+                                baslik: item.title,
+                                aciklama: item.description.replace(/<[^>]*>/g, '').slice(0, 150) + '...',
+                                resim: item.thumbnail || item.enclosure?.link || 'varsayilan-haber-resmi.jpg',
+                                tarih: new Date(item.pubDate).toLocaleString('tr-TR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                }),
+                                link: item.link,
+                                etiket: belirleHaberEtiketi(item.title)
+                            }));
+                            tumHaberler = [...tumHaberler, ...kaynakHaberler];
+                        }
+                    } catch (hata) {
+                        console.error(`${kaynak} için hata:`, hata);
+                    }
+                }
+
+                // Haberleri tarihe göre sırala ve en yeni 10 haberi döndür
+                return tumHaberler
+                    .sort((a, b) => new Date(b.tarih) - new Date(a.tarih))                    .slice(0, 10);
+
+            } catch (hata) {
+                console.error('Haber çekme hatası:', hata);
+                return [];
+            }
+        }
+
+        function belirleHaberEtiketi(baslik) {
+            const etiketler = {
+                'Bitcoin': 'Bitcoin',
+                'ETH': 'Ethereum',
+                'Ethereum': 'Ethereum',
+                'Solana': 'Solana',
+                'SOL': 'Solana',
+                'BNB': 'BNB Chain',
+                'Cardano': 'Cardano',
+                'ADA': 'Cardano',
+                'XRP': 'XRP',
+                'Ripple': 'XRP',
+                'DOGE': 'Dogecoin',
+                'Dogecoin': 'Dogecoin'
+            };
+
+            for (const [anahtar, etiket] of Object.entries(etiketler)) {
+                if (baslik.includes(anahtar)) {
+                    return etiket;
+                }
+            }
+            return 'Kripto';
+        }
+
+        async function haberleriGuncelle() {
+            const haberlerContainer = document.querySelector('.news-grid');
+            
+            if (haberlerContainer) {
+                // Yükleniyor göstergesi
+                haberlerContainer.innerHTML = `
+                    <div class="loading-indicator">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Haberler yükleniyor...</p>
+                    </div>
+                `;
+                
+                const haberler = await haberleriFeeddenCek();
+                
+                if (haberler.length === 0) {
+                    haberlerContainer.innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Haberler yüklenirken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                haberlerContainer.innerHTML = '';
+                
+                haberler.forEach(haber => {
+                    const haberKarti = document.createElement('div');
+                    haberKarti.className = 'news-card fade-in';
+                    haberKarti.innerHTML = `
+                        <a href="${haber.link}" target="_blank" rel="noopener noreferrer">
+                            <div class="news-image">
+                                <img src="${haber.resim}" alt="${haber.baslik}" onerror="this.src='varsayilan-haber-resmi.jpg'">
+                            </div>
+                            <div class="news-content">
+                                <div class="news-tag">${haber.etiket}</div>
+                                <h3>${haber.baslik}</h3>
+                                <p>${haber.aciklama}</p>
+                                <span class="news-date">${haber.tarih}</span>
+                            </div>
+                        </a>
+                    `;
+                    haberlerContainer.appendChild(haberKarti);
+                });
+
+                document.querySelectorAll('.news-card').forEach((card, index) => {
+                    card.style.transitionDelay = `${index * 0.15}s`;
+                    setTimeout(() => card.classList.add('visible'), 100);
+                });
+            }
+        }
+
+        async function donusturucuOlustur() {
+            try {
+                // Desteklenen para birimleri
+                const paraBirimleri = ['try', 'usd', 'eur', 'gbp'];
+                const kriptoParalar = ['bitcoin', 'ethereum', 'solana', 'ripple', 'cardano'];
+
+                // Para birimi seçenekleri için HTML oluştur
+                const paraBirimiHTML = paraBirimleri.map(birim => 
+                    `<option value="${birim}">${birim.toUpperCase()}</option>`
+                ).join('');
+
+                // Kripto para seçenekleri için HTML oluştur
+                const kriptoHTML = kriptoParalar.map(kripto => 
+                    `<option value="${kripto}">${kripto.charAt(0).toUpperCase() + kripto.slice(1)}</option>`
+                ).join('');
+
+                // Dönüştürücü formu oluştur
+                const donusturucuHTML = `
+                    <div class="converter-container">
+                        <h3>Kripto Para Dönüştürücü</h3>
+                        <div class="converter-form">
+                            <div class="form-group">
+                                <label>Miktar</label>
+                                <input type="number" id="amount" min="0" step="any" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Kaynak Para Birimi</label>
+                                <select id="fromCurrency">
+                                    ${kriptoHTML}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Hedef Para Birimi</label>
+                                <select id="toCurrency">
+                                    ${paraBirimiHTML}
+                                </select>
+                            </div>
+                            <div class="result" id="convertResult">
+                                1 BTC = ... TRY
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // HTML'i sayfaya ekle
+                document.querySelector('.market-stats .container').insertAdjacentHTML('beforeend', donusturucuHTML);
+
+                // Event listener'ları ekle
+                ['amount', 'fromCurrency', 'toCurrency'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', donusturucuGuncelle);
+                });
+
+                // İlk dönüşümü yap
+                await donusturucuGuncelle();
+
+            } catch (hata) {
+                console.error('Dönüştürücü oluşturma hatası:', hata);
+            }
+        }
+
+        async function donusturucuGuncelle() {
+            const miktar = document.getElementById('amount').value;
+            const kaynakPara = document.getElementById('fromCurrency').value;
+            const hedefPara = document.getElementById('toCurrency').value;
+            const sonucElement = document.getElementById('convertResult');
+
+            try {
+                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${kaynakPara}&vs_currencies=${hedefPara}`);
+                const data = await response.json();
+
+                if (data[kaynakPara]) {
+                    const kur = data[kaynakPara][hedefPara];
+                    const sonuc = (miktar * kur).toLocaleString('tr-TR', {
+                        maximumFractionDigits: 2
+                    });
+                    sonucElement.innerHTML = `${miktar} ${kaynakPara.toUpperCase()} = ${sonuc} ${hedefPara.toUpperCase()}`;
+                }
+            } catch (hata) {
+                console.error('Dönüşüm hatası:', hata);
+                sonucElement.innerHTML = 'Dönüşüm sırasında bir hata oluştu';
+            }
+        }
+
+        async function kriptoVerileriniGetir() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true&locale=tr');
+                const data = await response.json();
+                
+                // Her kripto para için grafik verisi oluştur
+                data.forEach(coin => {
+                    cryptoData[coin.symbol.toUpperCase()] = {
+                        name: coin.name,
+                        price: coin.current_price,
+                        change: coin.price_change_percentage_24h,
+                        color: `#${Math.floor(Math.random()*16777215).toString(16)}`, // Rastgele renk
+                        history: coin.sparkline_in_7d?.price.slice(-6) || [0,0,0,0,0,0]
+                    };
+                });
+
+                const coinGridHTML = data.map(coin => `
+                    <div class="coin-card fade-in">
+                        <div class="coin-header">
+                            <div class="coin-info">
+                                <img src="${coin.image}" alt="${coin.name}" class="coin-icon">
+                                <div>
+                                    <div class="coin-name">${coin.name}</div>
+                                    <div class="coin-symbol">${coin.symbol.toUpperCase()}</div>
+                                </div>
+                            </div>
+                            <div class="coin-price">
+                                <div class="current-price">$${coin.current_price.toLocaleString('en-US')}</div>
+                                <div class="price-change ${coin.price_change_percentage_24h >= 0 ? 'positive' : 'negative'}">
+                                    ${coin.price_change_percentage_24h.toFixed(2)}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="coin-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Piyasa Değeri:</span>
+                                <span class="detail-value">$${(coin.market_cap / 1e9).toFixed(2)} Milyar</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">24s Hacim:</span>
+                                <span class="detail-value">$${(coin.total_volume / 1e6).toFixed(2)} Milyon</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.querySelector('.coin-grid').innerHTML = coinGridHTML;
+
+                // Kart animasyonları ve grafikleri oluştur
+                document.querySelectorAll('.coin-card').forEach((card, index) => {
+                    card.style.transitionDelay = `${index * 0.1}s`;
+                    setTimeout(() => {
+                        card.classList.add('visible');
+                        // Grafik oluştur
+                        const symbol = card.querySelector('.coin-symbol').textContent;
+                        createChart(symbol);
+                    }, 100);
+                });
+
+            } catch (hata) {
+                console.error('Kripto veri çekme hatası:', hata);
+                document.querySelector('.coin-grid').innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Veriler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Her 1 dakikada bir verileri güncelle
+        setInterval(kriptoVerileriniGetir, 60000);
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', () => {
+            kriptoVerileriniGetir();
+        });
+
+        // Eğitim kartları için gözlemci
+        const educationObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    
+                    // İçerik öğelerini kademeli olarak göster
+                    const items = entry.target.querySelectorAll('.education-item');
+                    items.forEach((item, i) => {
+                        setTimeout(() => {
+                            item.style.animation = `slideIn 0.5s ease-out ${i * 0.2}s forwards`;
+                        }, index * 100);
+                    });
+                }
+            });
+        }, {
+            threshold: 0.2
+        });
+
+        // Eğitim kartlarını gözlemle
+        document.querySelectorAll('.education-card').forEach(card => {
+            educationObserver.observe(card);
+        });
+
+        // Quiz Modal Açma ve Kapama Fonksiyonları
+        function quizModalAc(event) {
+            event.preventDefault();
+            const modal = document.getElementById('quizModal');
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+        }
+
+        function quizModalKapat() {
+            const modal = document.getElementById('quizModal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        // Modal dışına tıklandığında kapatma
+        window.onclick = function(event) {
+            const modal = document.getElementById('quizModal');
+            if (event.target == modal) {
+                quizModalKapat();
+            }
+        }
+
+        setInterval(() => {
+            Object.keys(cryptoData).forEach(coin => {
+                const chartElement = document.querySelector(`#${coin.toLowerCase()}Chart`);
+                if (chartElement) {
+                    const coinCard = chartElement.closest('.coin-card');
+                    if (coinCard) {
+                        // Mevcut güncelleme kodu
+                    }
+                }
+            });
+        }, 30000);
+
+        function quizBaslat() {
+            // Quiz başlatma mantığı buraya gelecek
+            alert('Quiz başlatılıyor...');
+        }
+
+        const quizSorulari = [
+            {
+                soru: "Bitcoin'in yaratıcısı kimdir?",
+                secenekler: ["Satoshi Nakamoto", "Vitalik Buterin", "Charlie Lee", "Roger Ver"],
+                dogruCevap: 0
+            },
+            {
+                soru: "Ethereum'un ana özelliği nedir?",
+                secenekler: ["Akıllı Kontratlar", "Hızlı İşlemler", "Gizlilik", "Düşük Ücretler"],
+                dogruCevap: 0
+            },
+            {
+                soru: "Hangi konsensüs mekanizması daha çevre dostudur?",
+                secenekler: ["Proof of Stake", "Proof of Work", "Proof of Authority", "Proof of Space"],
+                dogruCevap: 0
+            }
+        ];
+
+        let mevcutSoru = 0;
+        let puan = 0;
+
+        function quizModalAc() {
+            document.getElementById('quizModal').classList.add('active');
+        }
+
+        function quizModalKapat() {
+            document.getElementById('quizModal').classList.remove('active');
+            mevcutSoru = 0;
+            puan = 0;
+        }
+
+        function quizBaslat() {
+            mevcutSoru = 0;
+            puan = 0;
+            soruGoster();
+        }
+
+        function soruGoster() {
+            const soru = quizSorulari[mevcutSoru];
+            const quizContent = document.querySelector('.quiz-content');
+            
+            quizContent.innerHTML = `
+                <h3 class="quiz-question">${soru.soru}</h3>
+                <div class="quiz-options">
+                    ${soru.secenekler.map((secenek, index) => `
+                        <button class="quiz-option" onclick="cevapKontrol(${index})">${secenek}</button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function cevapKontrol(secilenIndex) {
+            const soru = quizSorulari[mevcutSoru];
+            
+            if (secilenIndex === soru.dogruCevap) {
+                puan += 100;
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Doğru!',
+                    text: 'Harika gidiyorsun!',
+                    confirmButtonColor: '#9945FF'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Yanlış!',
+                    text: `Doğru cevap: ${soru.secenekler[soru.dogruCevap]}`,
+                    confirmButtonColor: '#9945FF'
+                });
+            }
+
+            mevcutSoru++;
+            
+            if (mevcutSoru < quizSorulari.length) {
+                setTimeout(soruGoster, 1500);
+            } else {
+                setTimeout(() => {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Quiz Bitti!',
+                        text: `Toplam puanın: ${puan}`,
+                        confirmButtonColor: '#9945FF'
+                    }).then(() => {
+                        quizModalKapat();
+                    });
+                }, 1500);
+            }
+        }
     </script>
 </body>
 </html>
